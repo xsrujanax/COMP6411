@@ -1,5 +1,6 @@
 import socket
 import os
+import re
 
 def send_request(request):
     HOST, PORT = "localhost", 9999
@@ -12,6 +13,22 @@ def send_request(request):
             return response
     except ConnectionRefusedError:
         print(f"Failed to connect to the server at {HOST}:{PORT}")
+
+
+def check_age(age):
+    try:
+        age = int(age)
+        return 1<=age<=120
+    except ValueError:
+        return False
+    
+def check_phone(phone):
+    phone_pattern = re.compile(r'^(\d{3} \d{3}-\d{4}|\d{3}-\d{4})$')
+    return phone_pattern.match(phone) is not None
+
+def check_address(address):
+    address_pattern = re.compile(r'^[a-zA-Z0-9 .\-]+$')
+    return address_pattern.match(address) is not None
 
 def main():
     menu = """
@@ -26,10 +43,7 @@ Customer Management Menu
 8. Exit
 Select: """
     while True:
-        if os.name == 'nt':
-            os.system('cls')
-        else:
-            os.system('clear')
+        os.system('cls' if os.name == 'nt' else 'clear')
 
         choice = input(menu).strip()
 
@@ -39,28 +53,50 @@ Select: """
 
         elif choice == "2":
             first_name = input("Enter customer's first name: ").strip().lower()
+
             age = input("Enter customer's age: ").strip().lower()
+            while age and not check_age(age):
+                print("Invalid age. Please enter a valid age between 1 and 120.")
+                age = input("Enter customer's age: ").strip().lower()
+
             address = input("Enter customer's address: ").strip().lower()
+            while address and not check_address(address):
+                print("Invalid address. Please enter a valid address containing only alphanumeric characters, spaces, periods, and dashes.")
+                address = input("Enter customer's address (optional): ").strip().lower()
+
             phone = input("Enter customer's phone: ").strip().lower()
+            while phone and not check_phone(phone):
+                print("Invalid phone number. Please enter a valid phone number (e.g., 123-4567 or 123 456-7890).")
+                phone = input("Enter customer's phone: ").strip().lower()
+
             request = f"ADD|{first_name}|{age}|{address}|{phone}"
         
         elif choice == "3":
-            first_name = input("Enter customer's first name: ").strip()
+            first_name = input("Enter customer's first name: ").strip().lower()
             request = f"DELETE|{first_name}"
 
         elif choice == "4":
-            first_name = input("Enter customer's first name: ").strip()
-            age = input("Enter new age: ").strip()
+            first_name = input("Enter customer's first name: ").strip().lower()
+            age = input("Enter new age: ").strip().lower()
+            while age and not check_age(age):
+                print("Age must be an integer (1 >= age <= 120). Please try again...")
+                age = input("Enter customer's age: ").strip().lower()
             request = f"UPDATE_AGE|{first_name}|{age}"
         
         elif choice == "5":
-            first_name = input("Enter customer's first name: ").strip()
-            address = input("Enter new address: ").strip()
+            first_name = input("Enter customer's first name: ").strip().lower()
+            address = input("Enter new address: ").strip().lower()
+            while address and not check_address(address):
+                print("Invalid address. Please enter a valid address containing only alphanumeric characters, spaces, periods, and dashes.")
+                address = input("Enter customer's address: ").strip().lower()
             request = f"UPDATE_ADDRESS|{first_name}|{address}"
 
         elif choice == "6":
-            first_name = input("Enter customer's first name: ").strip()
-            phone = input("Enter new phone: ").strip()
+            first_name = input("Enter customer's first name: ").strip().lower()
+            phone = input("Enter new phone: ").strip().lower()
+            while phone and not check_phone(phone):
+                print("Invalid phone number. Please enter a valid phone number (e.g., 123-4567 or 123 456-7890).")
+                phone = input("Enter customer's phone: ").strip().lower()
             request = f"UPDATE_PHONE|{first_name}|{phone}"
 
         elif choice == "7":
@@ -74,7 +110,7 @@ Select: """
             print("Invalid option, please try again.")
 
         response = send_request(request)
-        print(response)
+        print("Server response:", response)
         input("Press any key to continue...")
 
 if __name__ == "__main__":
